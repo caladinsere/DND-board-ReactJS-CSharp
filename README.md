@@ -1,2 +1,2 @@
-# ReactJS
-Sample ReactJS Coding
+# DND Board
+DND ReactJS Board

@@ -10,7 +10,7 @@ CREATE proc [dbo].[Stored_Procedure]
     @DisplayOrder int,
     @ModifiedBy nvarchar(128)
 as
-begin
+begin try
     declare @_modifiedDate datetime = getutcdate();
     update 
         Table 
@@ -27,4 +27,15 @@ begin
         ModifiedBy = @ModifiedBy
     where
         Id = @Id
-end
+    commit
+end try
+begin catch
+	IF @@TRANCOUNT > 0
+		Rollback
+
+	declare @ErrMsg nvarchar(4000), @ErrSeverity int
+	select @ErrMsg = ERROR_MESSAGE(),
+			@ErrSeverity = ERROR_SEVERITY()
+
+	RAISERROR(@ErrMsg, @ErrSeverity, 1)
+end catch

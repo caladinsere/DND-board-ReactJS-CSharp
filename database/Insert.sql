@@ -10,7 +10,7 @@ CREATE proc [dbo].[Stored_Procedure]
     @DisplayOrder int,
     @ModifiedBy nvarchar(128)
 as
-begin
+begin try
     insert into Table(
         ProjectId,
         Task,
@@ -34,5 +34,16 @@ begin
         );
 
     set @Id = SCOPE_IDENTITY();
-end
+    commit
+end try
+begin catch
+	IF @@TRANCOUNT > 0
+		Rollback
+
+	declare @ErrMsg nvarchar(4000), @ErrSeverity int
+	select @ErrMsg = ERROR_MESSAGE(),
+			@ErrSeverity = ERROR_SEVERITY()
+
+	RAISERROR(@ErrMsg, @ErrSeverity, 1)
+end catch
         

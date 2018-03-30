@@ -1,28 +1,29 @@
-create proc [dbo].[Stored_Procedure]
+CREATE PROC [dbo].[Stored_Procedure]
     @updtdo [dbo].[Update_TableType] READONLY
-as
-begin try
-    Update 
-        Table
-    Set
-        Table.DisplayOrder = [@updtdo].DisplayOrder
-        From
-            Table P
-        Join
-            @updtdo
-        on
-            P.Id = [@updtdo].Id
-    Where
-        P.Id= [@updtdo].Id
-    commit
-end try
-begin catch
-	IF @@TRANCOUNT > 0
-		Rollback
+AS
+BEGIN TRANSACTION; 
 
-	declare @ErrMsg nvarchar(4000), @ErrSeverity int
-	select @ErrMsg = ERROR_MESSAGE(),
-			@ErrSeverity = ERROR_SEVERITY()
+BEGIN TRY
+    UPDATE Table
+    SET Table.DisplayOrder = [@updtdo].DisplayOrder
+    FROM Table P
+    JOIN  @updtdo
+    ON P.Id = [@updtdo].Id
+    WHERE P.Id= [@updtdo].Id
+END TRY  
+BEGIN CATCH  
+    SELECT   
+        ERROR_NUMBER() AS ErrorNumber  
+        ,ERROR_SEVERITY() AS ErrorSeverity  
+        ,ERROR_STATE() AS ErrorState  
+        ,ERROR_PROCEDURE() AS ErrorProcedure  
+        ,ERROR_LINE() AS ErrorLine  
+        ,ERROR_MESSAGE() AS ErrorMessage;  
 
-	RAISERROR(@ErrMsg, @ErrSeverity, 1)
-end catch
+    IF @@TRANCOUNT > 0  
+        ROLLBACK TRANSACTION;  
+END CATCH;  
+
+IF @@TRANCOUNT > 0  
+    COMMIT TRANSACTION;  
+GO  

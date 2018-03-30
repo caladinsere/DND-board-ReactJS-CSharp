@@ -1,33 +1,32 @@
-CREATE proc [dbo].[Stored_Procedure]
+CREATE PROC [dbo].[Stored_Procedure]
 	@ProjectId int
-as
-begin try
-	select 
+AS
+BEGIN TRY
+	SELECT 
 		Id,
 		Name,
 		DateStart,
 		Description,
 		IsApproved
-	from Table
-	where 
-		Id= @projectId;
+	FROM Table
+	WHERE Id= @projectId;
 
-	select 
+	SELECT 
 		Id,
 		DisplayName,
 		Description,
 		DisplayOrder
-	from Table2
-	order by DisplayOrder
+	FROM Table2
+	ORDER BY DisplayOrder
 
-	select 
+	SELECT 
 		Id,
 		DisplayName,
 		Description,
 		DisplayOrder
-	from Table3
+	FROM Table3
 
-	select 
+	SELECT 
 		Id,
 		ProjectId,
 		Task,
@@ -38,20 +37,17 @@ begin try
 		Milestone,
 		DisplayOrder,
 		ModifiedDate
-	from Table4
-	where
-		ProjectId = @projectId
-	order by DisplayOrder
-	commit
-end try
-begin catch
-	IF @@TRANCOUNT > 0
-		Rollback
-
-	declare @ErrMsg nvarchar(4000), @ErrSeverity int
-	select @ErrMsg = ERROR_MESSAGE(),
-			@ErrSeverity = ERROR_SEVERITY()
-
-	RAISERROR(@ErrMsg, @ErrSeverity, 1)
-end catch
-end
+	FROM Table4
+	WHERE ProjectId = @projectId
+	ORDER BY DisplayOrder
+END TRY
+BEGIN CATCH  
+    SELECT  
+        ERROR_NUMBER() AS ErrorNumber  
+        ,ERROR_SEVERITY() AS ErrorSeverity  
+        ,ERROR_STATE() AS ErrorState  
+        ,ERROR_PROCEDURE() AS ErrorProcedure  
+        ,ERROR_LINE() AS ErrorLine  
+        ,ERROR_MESSAGE() AS ErrorMessage;  
+END CATCH;  
+GO  

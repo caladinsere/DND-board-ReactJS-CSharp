@@ -1,4 +1,4 @@
-CREATE proc [dbo].[Stored_Procedure]
+CREATE PROC [dbo].[Stored_Procedure]
     @Id int OUT,
     @ProjectId int,
     @Task nvarchar(50),
@@ -9,9 +9,11 @@ CREATE proc [dbo].[Stored_Procedure]
     @Milestone int,
     @DisplayOrder int,
     @ModifiedBy nvarchar(128)
-as
-begin try
-    insert into Table(
+AS
+BEGIN TRANSACTION; 
+
+BEGIN TRY
+    INSERT INTO Table(
         ProjectId,
         Task,
         Instruction,
@@ -33,17 +35,21 @@ begin try
         @ModifiedBy
         );
 
-    set @Id = SCOPE_IDENTITY();
-    commit
-end try
-begin catch
-	IF @@TRANCOUNT > 0
-		Rollback
+    SET @Id = SCOPE_IDENTITY();
+END TRY  
+BEGIN CATCH  
+    SELECT   
+        ERROR_NUMBER() AS ErrorNumber  
+        ,ERROR_SEVERITY() AS ErrorSeverity  
+        ,ERROR_STATE() AS ErrorState  
+        ,ERROR_PROCEDURE() AS ErrorProcedure  
+        ,ERROR_LINE() AS ErrorLine  
+        ,ERROR_MESSAGE() AS ErrorMessage;  
 
-	declare @ErrMsg nvarchar(4000), @ErrSeverity int
-	select @ErrMsg = ERROR_MESSAGE(),
-			@ErrSeverity = ERROR_SEVERITY()
+    IF @@TRANCOUNT > 0  
+        ROLLBACK TRANSACTION;  
+END CATCH;  
 
-	RAISERROR(@ErrMsg, @ErrSeverity, 1)
-end catch
-        
+IF @@TRANCOUNT > 0  
+    COMMIT TRANSACTION;  
+GO  

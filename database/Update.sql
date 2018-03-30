@@ -1,4 +1,4 @@
-CREATE proc [dbo].[Stored_Procedure]
+CREATE PROC [dbo].[Stored_Procedure]
     @Id int OUT,
     @ProjectId int,
     @Task nvarchar(50),
@@ -9,12 +9,13 @@ CREATE proc [dbo].[Stored_Procedure]
     @Milestone int,
     @DisplayOrder int,
     @ModifiedBy nvarchar(128)
-as
-begin try
-    declare @_modifiedDate datetime = getutcdate();
-    update 
-        Table 
-    set
+AS
+BEGIN TRANSACTION; 
+
+BEGIN TRY
+    DECLARE @_modifiedDate DATETIME = GETUTCDATE();
+    UPDATE Table 
+    SET
         ProjectId = @ProjectId,
         Task = @Task,
         Instruction = @Instruction,
@@ -25,17 +26,21 @@ begin try
         DisplayOrder = @DisplayOrder,
         ModifiedDate = @_modifiedDate,
         ModifiedBy = @ModifiedBy
-    where
-        Id = @Id
-    commit
-end try
-begin catch
-	IF @@TRANCOUNT > 0
-		Rollback
+    WHERE Id = @Id
+END TRY  
+BEGIN CATCH  
+    SELECT   
+        ERROR_NUMBER() AS ErrorNumber  
+        ,ERROR_SEVERITY() AS ErrorSeverity  
+        ,ERROR_STATE() AS ErrorState  
+        ,ERROR_PROCEDURE() AS ErrorProcedure  
+        ,ERROR_LINE() AS ErrorLine  
+        ,ERROR_MESSAGE() AS ErrorMessage;  
 
-	declare @ErrMsg nvarchar(4000), @ErrSeverity int
-	select @ErrMsg = ERROR_MESSAGE(),
-			@ErrSeverity = ERROR_SEVERITY()
+    IF @@TRANCOUNT > 0  
+        ROLLBACK TRANSACTION;  
+END CATCH;  
 
-	RAISERROR(@ErrMsg, @ErrSeverity, 1)
-end catch
+IF @@TRANCOUNT > 0  
+    COMMIT TRANSACTION;  
+GO  

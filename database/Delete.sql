@@ -1,20 +1,23 @@
-CREATE proc [dbo].[Stored_Procedure]
+CREATE PROC [dbo].[Stored_Procedure]
     @Id int
-as
-begin try
-    delete 
-        Table    
-    where
-        Id= @Id;
-    commit
-end try
-begin catch
-	IF @@TRANCOUNT > 0
-		Rollback
+AS
+BEGIN TRY
+    DELETE Table    
+    WHERE Id= @Id;
+END TRY
+BEGIN CATCH
+    SELECT   
+        ERROR_NUMBER() AS ErrorNumber  
+        ,ERROR_SEVERITY() AS ErrorSeverity  
+        ,ERROR_STATE() AS ErrorState  
+        ,ERROR_PROCEDURE() AS ErrorProcedure  
+        ,ERROR_LINE() AS ErrorLine  
+        ,ERROR_MESSAGE() AS ErrorMessage;  
 
-	declare @ErrMsg nvarchar(4000), @ErrSeverity int
-	select @ErrMsg = ERROR_MESSAGE(),
-			@ErrSeverity = ERROR_SEVERITY()
+    IF @@TRANCOUNT > 0  
+        ROLLBACK TRANSACTION;  
+END CATCH;  
 
-	RAISERROR(@ErrMsg, @ErrSeverity, 1)
-end catch
+IF @@TRANCOUNT > 0  
+    COMMIT TRANSACTION;  
+GO 

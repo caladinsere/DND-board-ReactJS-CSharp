@@ -1,26 +1,30 @@
-CREATE proc [dbo].[Stored_Procedure]
+CREATE PROC [dbo].[Stored_Procedure]
     @Id int,
     @Milestone int
-as
-begin try
+AS
+BEGIN TRANSACTION;  
 
-declare @_modifiedDate datetime = getutcdate();
-    update 
-        Table
-    set
+BEGIN TRY
+DECLARE @_modifiedDate DATETIME = GETUTCDATE();
+    UPDATE Table
+    SET
         ModifiedDate = @_modifiedDate,
         Milestone = @Milestone
-    where
-        Id = @Id
-    commit
-end try
-begin catch
-	IF @@TRANCOUNT > 0
-		Rollback
+    WHERE Id = @Id
+END TRY  
+BEGIN CATCH  
+    SELECT   
+        ERROR_NUMBER() AS ErrorNumber  
+        ,ERROR_SEVERITY() AS ErrorSeverity  
+        ,ERROR_STATE() AS ErrorState  
+        ,ERROR_PROCEDURE() AS ErrorProcedure  
+        ,ERROR_LINE() AS ErrorLine  
+        ,ERROR_MESSAGE() AS ErrorMessage;  
 
-	declare @ErrMsg nvarchar(4000), @ErrSeverity int
-	select @ErrMsg = ERROR_MESSAGE(),
-			@ErrSeverity = ERROR_SEVERITY()
+    IF @@TRANCOUNT > 0  
+        ROLLBACK TRANSACTION;  
+END CATCH;  
 
-	RAISERROR(@ErrMsg, @ErrSeverity, 1)
-end catch
+IF @@TRANCOUNT > 0  
+    COMMIT TRANSACTION;  
+GO  

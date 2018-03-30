@@ -1,28 +1,29 @@
-create proc [dbo].[Stored_Procedure]
+CREATE PROC [dbo].[Stored_Procedure]
     @updtStatus [dbo].[UptStatus_TableType] READONLY
-as
-begin try
-    Update 
-        Table
-    Set
-        Table.ProjStatusId = [@updtStatus].ProjStatusId
-        From
-            Table P
-        Join
-            @updtStatus
-        on
-            P.Id = [@updtStatus].Id
-    Where
-        P.Id= [@updtStatus].Id
-    commit
-end try
-begin catch
-	IF @@TRANCOUNT > 0
-		Rollback
+AS
+BEGIN TRANSACTION; 
 
-	declare @ErrMsg nvarchar(4000), @ErrSeverity int
-	select @ErrMsg = ERROR_MESSAGE(),
-			@ErrSeverity = ERROR_SEVERITY()
+BEGIN TRY
+    UPDATE Table
+    SET Table.ProjStatusId = [@updtStatus].ProjStatusId
+    FROM Table P
+    JOIN @updtStatus
+    ON P.Id = [@updtStatus].Id
+    WHERE P.Id= [@updtStatus].Id
+END TRY  
+BEGIN CATCH  
+    SELECT   
+        ERROR_NUMBER() AS ErrorNumber  
+        ,ERROR_SEVERITY() AS ErrorSeverity  
+        ,ERROR_STATE() AS ErrorState  
+        ,ERROR_PROCEDURE() AS ErrorProcedure  
+        ,ERROR_LINE() AS ErrorLine  
+        ,ERROR_MESSAGE() AS ErrorMessage;  
 
-	RAISERROR(@ErrMsg, @ErrSeverity, 1)
-end catch
+    IF @@TRANCOUNT > 0  
+        ROLLBACK TRANSACTION;  
+END CATCH;  
+
+IF @@TRANCOUNT > 0  
+    COMMIT TRANSACTION;  
+GO  
